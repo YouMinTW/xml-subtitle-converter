@@ -211,66 +211,43 @@ async function createCombinedSRT(
     const subtitles1 = extractSubtitlesWithRegex(xmlData1, language1);
     const subtitles2 = extractSubtitlesWithRegex(xmlData2, language2);
 
-    // Sort subtitles by begin time
-    subtitles1.sort(
-      (a, b) =>
-        parseInt(a.begin.replace("t", "")) - parseInt(b.begin.replace("t", ""))
-    );
-    subtitles2.sort(
-      (a, b) =>
-        parseInt(a.begin.replace("t", "")) - parseInt(b.begin.replace("t", ""))
-    );
+    // Create a merged array of all subtitles with language indicator
+    const mergedSubtitles = [
+      ...subtitles1.map((sub) => ({
+        ...sub,
+        language: language1,
+        tickRate: tickRate1,
+        startTime: parseInt(sub.begin.replace("t", "")),
+      })),
+      ...subtitles2.map((sub) => ({
+        ...sub,
+        language: language2,
+        tickRate: tickRate2,
+        startTime: parseInt(sub.begin.replace("t", "")),
+      })),
+    ];
+
+    // Sort all subtitles by start time
+    mergedSubtitles.sort((a, b) => a.startTime - b.startTime);
 
     // Generate combined SRT content
     let srtContent = "";
     let index = 1;
 
-    // Use dynamic time warping approach to match subtitles
-    let j = 0; // Index for subtitles2
-
-    for (let i = 0; i < subtitles1.length; i++) {
-      const subtitle1 = subtitles1[i];
-      const startTime1 = parseInt(subtitle1.begin.replace("t", ""));
-      const endTime1 = parseInt(subtitle1.end.replace("t", ""));
-
-      // Find the best matching subtitle in the second language
-      let bestMatch = null;
-      let bestMatchIndex = -1;
-      let minTimeDiff = Number.MAX_SAFE_INTEGER;
-
-      // Look ahead in a window of 10 subtitles to find the best match
-      const searchWindow = 10;
-      const startJ = Math.max(0, j - 2); // Allow for some backtracking
-      const endJ = Math.min(subtitles2.length, startJ + searchWindow);
-
-      for (let k = startJ; k < endJ; k++) {
-        const subtitle2 = subtitles2[k];
-        const startTime2 = parseInt(subtitle2.begin.replace("t", ""));
-        const timeDiff = Math.abs(startTime1 - startTime2);
-
-        if (timeDiff < minTimeDiff) {
-          minTimeDiff = timeDiff;
-          bestMatch = subtitle2;
-          bestMatchIndex = k;
-        }
-      }
+    for (let i = 0; i < mergedSubtitles.length; i++) {
+      const subtitle = mergedSubtitles[i];
 
       // Format SRT entry
       srtContent += `${index++}\n`;
       srtContent += `${convertTimeToSRT(
-        subtitle1.begin,
-        tickRate1
-      )} --> ${convertTimeToSRT(subtitle1.end, tickRate1)}\n`;
-      srtContent += `${subtitle1.text}\n`;
+        subtitle.begin,
+        subtitle.tickRate
+      )} --> ${convertTimeToSRT(subtitle.end, subtitle.tickRate)}\n`;
 
-      if (bestMatch && minTimeDiff < 10000000) {
-        // 1 second threshold
-        srtContent += `${bestMatch.text}\n`;
-        // Update j to the position after the best match to maintain sequence
-        j = bestMatchIndex + 1;
-      }
+      // Add language indicator if needed (optional)
+      // srtContent += `[${subtitle.language === "kr" ? "한국어" : "中文"}] `;
 
-      srtContent += "\n";
+      srtContent += `${subtitle.text}\n\n`;
     }
 
     // Write to output file
@@ -306,58 +283,33 @@ async function createCombinedTXT(
     const subtitles1 = extractSubtitlesWithRegex(xmlData1, language1);
     const subtitles2 = extractSubtitlesWithRegex(xmlData2, language2);
 
-    // Sort subtitles by begin time
-    subtitles1.sort(
-      (a, b) =>
-        parseInt(a.begin.replace("t", "")) - parseInt(b.begin.replace("t", ""))
-    );
-    subtitles2.sort(
-      (a, b) =>
-        parseInt(a.begin.replace("t", "")) - parseInt(b.begin.replace("t", ""))
-    );
+    // Create a merged array of all subtitles with language indicator
+    const mergedSubtitles = [
+      ...subtitles1.map((sub) => ({
+        ...sub,
+        language: language1,
+        startTime: parseInt(sub.begin.replace("t", "")),
+      })),
+      ...subtitles2.map((sub) => ({
+        ...sub,
+        language: language2,
+        startTime: parseInt(sub.begin.replace("t", "")),
+      })),
+    ];
+
+    // Sort all subtitles by start time
+    mergedSubtitles.sort((a, b) => a.startTime - b.startTime);
 
     // Generate combined TXT content
     let txtContent = "";
 
-    // Use dynamic time warping approach to match subtitles
-    let j = 0; // Index for subtitles2
+    for (let i = 0; i < mergedSubtitles.length; i++) {
+      const subtitle = mergedSubtitles[i];
 
-    for (let i = 0; i < subtitles1.length; i++) {
-      const subtitle1 = subtitles1[i];
-      const startTime1 = parseInt(subtitle1.begin.replace("t", ""));
+      // Add language indicator if needed (optional)
+      // txtContent += `[${subtitle.language === "kr" ? "한국어" : "中文"}] `;
 
-      // Find the best matching subtitle in the second language
-      let bestMatch = null;
-      let bestMatchIndex = -1;
-      let minTimeDiff = Number.MAX_SAFE_INTEGER;
-
-      // Look ahead in a window of 10 subtitles to find the best match
-      const searchWindow = 10;
-      const startJ = Math.max(0, j - 2); // Allow for some backtracking
-      const endJ = Math.min(subtitles2.length, startJ + searchWindow);
-
-      for (let k = startJ; k < endJ; k++) {
-        const subtitle2 = subtitles2[k];
-        const startTime2 = parseInt(subtitle2.begin.replace("t", ""));
-        const timeDiff = Math.abs(startTime1 - startTime2);
-
-        if (timeDiff < minTimeDiff) {
-          minTimeDiff = timeDiff;
-          bestMatch = subtitle2;
-          bestMatchIndex = k;
-        }
-      }
-
-      txtContent += `${subtitle1.text}\n`;
-
-      if (bestMatch && minTimeDiff < 10000000) {
-        // 1 second threshold
-        txtContent += `${bestMatch.text}\n`;
-        // Update j to the position after the best match to maintain sequence
-        j = bestMatchIndex + 1;
-      }
-
-      txtContent += "\n";
+      txtContent += `${subtitle.text}\n\n`;
     }
 
     // Write to output file
