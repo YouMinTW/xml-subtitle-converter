@@ -1,0 +1,28 @@
+{
+  "name": "xmlparser",
+  "version": "1.0.0",
+  "description": "Convert XML subtitle files to SRT and TXT formats",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "convert": "node src/cli.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "xml-subtitle-converter": "src/cli.js"
+  },
+  "keywords": [
+    "xml",
+    "subtitle",
+    "srt",
+    "txt",
+    "converter"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "fast-xml-parser": "^4.3.2",
+    "fs-extra": "^11.2.0"
+  }
+}
