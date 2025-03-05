@@ -1,5 +1,5 @@
 {
-  "name": "xmlparser",
+  "name": "xml-subtitle-converter",
   "version": "1.0.0",
   "description": "Convert XML subtitle files to SRT and TXT formats",
   "main": "src/index.js",
