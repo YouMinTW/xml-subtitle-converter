@@ -71,7 +71,12 @@ program
     "Language of the second XML file (kr or ch)",
     "ch"
   )
-  .option("-n, --name <name>", "Base name for the output files", "combined")
+  .option("-n, --name <n>", "Base name for the output files", "combined")
+  .option(
+    "-m, --mode <mode>",
+    "Combination mode: 'paired' (match subtitles) or 'timeline' (sort by time)",
+    "timeline"
+  )
   .action(async (xmlFile1, xmlFile2, options) => {
     try {
       // Ensure the XML files exist
@@ -81,6 +86,14 @@ program
       }
       if (!fs.existsSync(xmlFile2)) {
         console.error(`Error: File ${xmlFile2} does not exist.`);
+        process.exit(1);
+      }
+
+      // Validate mode option
+      if (options.mode !== "paired" && options.mode !== "timeline") {
+        console.error(
+          `Error: Invalid mode '${options.mode}'. Use 'paired' or 'timeline'.`
+        );
         process.exit(1);
       }
 
@@ -97,18 +110,20 @@ program
         xmlFile2,
         srtPath,
         options.language1,
-        options.language2
+        options.language2,
+        options.mode
       );
       await createCombinedTXT(
         xmlFile1,
         xmlFile2,
         txtPath,
         options.language1,
-        options.language2
+        options.language2,
+        options.mode
       );
 
       console.log(
-        `Successfully combined ${xmlFile1} and ${xmlFile2} into SRT and TXT formats.`
+        `Successfully combined ${xmlFile1} and ${xmlFile2} into SRT and TXT formats using ${options.mode} mode.`
       );
     } catch (error) {
       console.error("Error:", error.message);
@@ -121,10 +136,23 @@ program
   .command("default")
   .description("Process the default files (ep1-kr.xml and ep1-ch.xml)")
   .option("-o, --output <directory>", "Output directory", "./output")
+  .option(
+    "-m, --mode <mode>",
+    "Combination mode: 'paired' (match subtitles) or 'timeline' (sort by time)",
+    "timeline"
+  )
   .action(async (options) => {
     try {
       // Ensure the output directory exists
       fs.ensureDirSync(options.output);
+
+      // Validate mode option
+      if (options.mode !== "paired" && options.mode !== "timeline") {
+        console.error(
+          `Error: Invalid mode '${options.mode}'. Use 'paired' or 'timeline'.`
+        );
+        process.exit(1);
+      }
 
       // Default file paths
       const krXmlPath = path.join(process.cwd(), "ep1-kr.xml");
@@ -162,17 +190,21 @@ program
         chXmlPath,
         combinedSrtPath,
         "kr",
-        "ch"
+        "ch",
+        options.mode
       );
       await createCombinedTXT(
         krXmlPath,
         chXmlPath,
         combinedTxtPath,
         "kr",
-        "ch"
+        "ch",
+        options.mode
       );
 
-      console.log("All conversions completed successfully!");
+      console.log(
+        `All conversions completed successfully using ${options.mode} mode!`
+      );
     } catch (error) {
       console.error("Error:", error.message);
       process.exit(1);

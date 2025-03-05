@@ -8,6 +8,7 @@ This Node.js application converts XML subtitle files (TTML format) to SRT and TX
 - Convert XML subtitle files to TXT format
 - Create combined SRT files with subtitles from two languages
 - Create combined TXT files with subtitles from two languages
+- Two combination modes: 'paired' (match subtitles) and 'timeline' (sort by time)
 - Command-line interface for easy usage
 
 ## Prerequisites
@@ -44,11 +45,53 @@ npm run convert -- --help
 # Convert a single XML file
 npm run convert -- convert path/to/file.xml -l kr
 
-# Combine two XML files
+# Combine two XML files (timeline mode by default)
 npm run convert -- combine path/to/file1.xml path/to/file2.xml -l1 kr -l2 ch
 
-# Process the default files (ep1-kr.xml and ep1-ch.xml)
+# Combine two XML files using paired mode
+npm run convert -- combine path/to/file1.xml path/to/file2.xml -l1 kr -l2 ch -m paired
+
+# Process the default files (ep1-kr.xml and ep1-ch.xml) with timeline mode
 npm run convert -- default
+
+# Process the default files with paired mode
+npm run convert -- default -m paired
+```
+
+### Combination Modes
+
+The application supports two different modes for combining subtitles:
+
+#### Timeline Mode (Default)
+
+In timeline mode, all subtitles from both languages are merged and sorted by their start time. This preserves the original timing of each subtitle and displays them in the order they appear in the video.
+
+Example output (TXT format):
+
+```
+어렸을 때부터
+제 꿈은 딱 하나였어요
+
+我從小到大只有一個夢想
+
+이 세상에 있는 영화를 다 보는 것
+
+就是看遍世上每一部電影
+```
+
+#### Paired Mode
+
+In paired mode, the application attempts to match subtitles from the second language with those from the first language based on timing. Each subtitle from the first language is followed by its matching subtitle from the second language.
+
+Example output (TXT format):
+
+```
+어렸을 때부터
+제 꿈은 딱 하나였어요
+我從小到大只有一個夢想
+
+이 세상에 있는 영화를 다 보는 것
+就是看遍世上每一部電影
 ```
 
 ### Command Options
@@ -75,7 +118,8 @@ Options:
 - `-o, --output <directory>`: Output directory (default: "./output")
 - `-l1, --language1 <language>`: Language of the first XML file (kr or ch) (default: "kr")
 - `-l2, --language2 <language>`: Language of the second XML file (kr or ch) (default: "ch")
-- `-n, --name <name>`: Base name for the output files (default: "combined")
+- `-n, --name <n>`: Base name for the output files (default: "combined")
+- `-m, --mode <mode>`: Combination mode: 'paired' (match subtitles) or 'timeline' (sort by time) (default: "timeline")
 
 #### Default Command
 
@@ -86,6 +130,7 @@ npm run convert -- default [options]
 Options:
 
 - `-o, --output <directory>`: Output directory (default: "./output")
+- `-m, --mode <mode>`: Combination mode: 'paired' (match subtitles) or 'timeline' (sort by time) (default: "timeline")
 
 ### Using the Script Directly
 
@@ -101,8 +146,8 @@ This will process the default files (ep1-kr.xml and ep1-ch.xml) and create the f
 - `ep1-kr.txt`: Korean subtitles in TXT format
 - `ep1-ch.srt`: Chinese subtitles in SRT format
 - `ep1-ch.txt`: Chinese subtitles in TXT format
-- `ep1-combined.srt`: Combined subtitles in SRT format
-- `ep1-combined.txt`: Combined subtitles in TXT format
+- `ep1-combined.srt`: Combined subtitles in SRT format (using timeline mode by default)
+- `ep1-combined.txt`: Combined subtitles in TXT format (using timeline mode by default)
 
 ## File Formats
 
